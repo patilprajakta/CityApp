@@ -1,0 +1,63 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.neenbedankt.android-apt'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
+    }
+}
+
+
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "24.0.0"
+    defaultConfig {
+        applicationId "com.example.synerzip.explorecity"
+        minSdkVersion 16
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+        multiDexEnabled true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:23.1.1'
+    compile 'com.google.android.gms:play-services:10.0.1'
+    testCompile 'junit:junit:4.12'
+    compile 'com.mcxiaoke.next:recycler:1.4.2'
+
+    //segmented group
+    compile 'info.hoang8f:android-segmented:1.0.6'
+
+    //butterknife
+    compile 'com.jakewharton:butterknife:8.0.1'
+    apt 'com.jakewharton:butterknife-compiler:8.0.1'
+
+    //foursquare oauth token
+    compile 'com.foursquare:foursquare-android-oauth:1.0.3'
+
+    //collapsable toolbar
+    compile "com.android.support:appcompat-v7:23.1.1"
+    compile "com.android.support:design:23.1.1"
+    compile "com.android.support:palette-v7:23.1.1"
+    compile "com.android.support:cardview-v7:23.1.1"
+    compile "com.android.support:recyclerview-v7:23.1.1"
+
+}

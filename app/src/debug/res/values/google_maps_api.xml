@@ -1,0 +1,20 @@
+<resources>
+    <!--
+    TODO: Before you run your application, you need a Google Maps API key.
+
+    To get one, follow this link, follow the directions and press "Create" at the end:
+
+    https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=99:88:70:9C:76:39:A6:19:93:DD:5F:B5:92:B4:4D:D3:E9:FC:74:10%3Bcom.example.synerzip.explorecity
+
+    You can also add your credentials to an existing key, using this line:
+    99:88:70:9C:76:39:A6:19:93:DD:5F:B5:92:B4:4D:D3:E9:FC:74:10;com.example.synerzip.explorecity
+
+    Alternatively, follow the directions here:
+    https://developers.google.com/maps/documentation/android/start#get-key
+
+    Once you have your key (it starts with "AIza"), replace the "google_maps_key"
+    string in this file.
+    -->
+    <string name="google_maps_key" translatable="false" templateMergeStrategy="preserve">AIzaSyB9b5JPlDAZamvC_DHSyKaAgVY3mDtxiqY</string>
+</resources>
+
