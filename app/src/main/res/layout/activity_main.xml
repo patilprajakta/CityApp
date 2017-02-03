@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-    <!--   <android.support.v7.widget.Toolbar
-           app:title="ExploreCity"
-           app:titleTextColor="#ffffff"
-           android:id="@+id/toolbar"
-           android:layout_width="match_parent"
-           android:layout_height="wrap_content"
-           android:background="@color/colorPrimary"/>-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        app:title="ExploreCity"
+        app:titleTextColor="#ffffff"/>
 
     <FrameLayout
         android:layout_width="fill_parent"
@@ -18,18 +20,15 @@
         android:layout_margin="@dimen/dimen_10">
 
         <com.example.synerzip.explorecity.CustomAutoCompleteTextView
-            
             android:id="@+id/seach_city"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:hint="Search City"
+            android:imeOptions="actionSearch"
             android:inputType="text"
-            android:singleLine="true" />
-
-        <requestFocus />
-
-
+            android:singleLine="true"/>
+        <requestFocus/>
         <Button
             android:id="@+id/clear_text_city"
             android:layout_width="20dp"
@@ -37,7 +36,7 @@
             android:layout_gravity="right|center_vertical"
             android:layout_margin="8dp"
             android:background="@drawable/clear_text"
-            android:onClick="clearTxtCity" />
+            android:onClick="clearTxtCity"/>
 
     </FrameLayout>
 
@@ -59,9 +58,9 @@
             android:layout_width="145dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
-            android:checked="true"
+            android:checked="false"
             android:padding="5dp"
-            android:text="Hotels" />
+            android:text="Hotels"/>
 
         <RadioButton
             android:id="@+id/radioBtnAtm"
@@ -70,7 +69,7 @@
             android:layout_height="wrap_content"
             android:enabled="true"
             android:padding="5dp"
-            android:text="ATMs" />
+            android:text="ATMs"/>
 
         <RadioButton
             android:id="@+id/radioBtnHospital"
@@ -79,7 +78,7 @@
             android:layout_height="wrap_content"
             android:enabled="true"
             android:padding="5dp"
-            android:text="Hospitals" />
+            android:text="Hospitals"/>
 
     </info.hoang8f.android.segmented.SegmentedGroup>
 
@@ -95,9 +94,8 @@
             android:layout_alignParentTop="true"
             android:hint="Search for a Place"
             android:inputType="text"
-            android:singleLine="true" />
-
-        <requestFocus />
+            android:singleLine="true"/>
+        <requestFocus/>
 
         <Button
             android:id="@+id/clear_text_place"
@@ -106,18 +104,18 @@
             android:layout_gravity="right|center_vertical"
             android:layout_margin="8dp"
             android:background="@drawable/clear_text"
-            android:onClick="clearTxtPlace" />
+            android:onClick="clearTxtPlace"/>
     </FrameLayout>
 
-    <fragment xmlns:map="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/map"
-        class="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/seach_city"
-        android:layout_marginTop="10dp"
-        map:cameraBearing="112.5"
-        map:cameraTilt="0"
-        map:cameraZoom="12" />
-
+    <fragment
+        xmlns:map="http://schemas.android.com/apk/res-auto"
+              android:id="@+id/new_map"
+              class="com.google.android.gms.maps.SupportMapFragment"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_below="@id/seach_city"
+              android:layout_marginTop="10dp"
+              map:cameraBearing="112.5"
+              map:cameraTilt="0"
+              map:cameraZoom="12"/>
 </LinearLayout>

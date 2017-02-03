@@ -6,29 +6,33 @@ import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
 /**
  * Created by Prajakta Patil on 4/1/17.
  */
 
-public class PlaceDetailsJsonParser {
+public
+class PlaceDetailsParser {
 
-    /** Receives a JSONObject and returns a list */
-    public List<HashMap<String,String>> parse(JSONObject jObject){
+    /**
+     * Receives a JSONObject and returns a list
+     */
+    public
+    List<HashMap<String, String>> parse(JSONObject jObject) {
 
         Double lat = Double.valueOf(0);
         Double lng = Double.valueOf(0);
 
         HashMap<String, String> hm = new HashMap<String, String>();
-        List<HashMap<String, String>> list = new ArrayList<HashMap<String,String>>();
+        List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
         try {
-
-            lat = (Double)jObject.getJSONObject("result").getJSONObject("geometry").getJSONObject("location").get("lat");
-            lng = (Double)jObject.getJSONObject("result").getJSONObject("geometry").getJSONObject("location").get("lng");
+            lat = (Double) jObject.getJSONObject("result").getJSONObject("geometry").getJSONObject("location").get("lat");
+            lng = (Double) jObject.getJSONObject("result").getJSONObject("geometry").getJSONObject("location").get("lng");
 
         } catch (JSONException e) {
             e.printStackTrace();
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
