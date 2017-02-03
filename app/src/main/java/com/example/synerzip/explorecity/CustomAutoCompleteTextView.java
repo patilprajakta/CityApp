@@ -20,14 +20,12 @@ public class CustomAutoCompleteTextView extends AutoCompleteTextView {
     /** Returns the Place Description corresponding to the selected item */
     @Override
     protected CharSequence convertSelectionToString(Object selectedItem) {
-        /** Each item in the autocompetetextview suggestion list is a hashmap object */
+        //Each item in the autocompetetextview suggestion list is a hashmap object
 
-        AutocompleteFilter filter =
-                new AutocompleteFilter.Builder().setCountry("India").build();
+        AutocompleteFilter filter = new AutocompleteFilter.Builder().setCountry("India").build();
         HashMap<String, String> hm = (HashMap<String, String>) selectedItem;
 
         return hm.get("description");
-
     }
 
 }

@@ -1,13 +1,18 @@
 package com.example.synerzip.explorecity;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -21,13 +26,16 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
-import com.google.android.gms.location.places.AutocompleteFilter;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
+
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -38,6 +46,8 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 
 import org.json.JSONObject;
 
@@ -51,17 +61,28 @@ import java.util.HashMap;
 import java.util.List;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 import info.hoang8f.android.segmented.SegmentedGroup;
 
 import static android.widget.Toast.LENGTH_SHORT;
-import static com.example.synerzip.explorecity.R.id.map;
+import static com.example.synerzip.explorecity.R.id.new_map;
 
 /**
  * Created by Prajakta Patil on 4/1/17.
  */
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
+public
+class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+
     final int PLACES = 0;
     final int PLACES_DETAILS = 1;
+    GoogleApiClient mGoogleApiClient;
+    Double latitude;
+    Double longitude;
+    private int PROXIMITY_RADIUS = 100000;
+    Location mLastLocation;
+    Marker mCurrLocationMarker;
+    LocationRequest mLocationRequest;
 
     @BindView(R.id.seach_city)
     AutoCompleteTextView mAutoCompleteCity;
@@ -84,20 +105,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @BindView(R.id.mCategorySelector)
     SegmentedGroup mSegmentedGroup;
 
+    Double cityLatitude;
+    Double cityLongitude;
+    String googleRating;
+
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected
+    void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //google map fragment
-        SupportMapFragment fm = (SupportMapFragment) getSupportFragmentManager().findFragmentById(map);
+        ButterKnife.bind(this);
+
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            checkLocationPermission();
+        }
+        if (!CheckGoogleServices()) {
+            Log.d("onCreate", "Google Play Services are not available");
+            finish();
+        } else {
+            Log.d("onCreate", "Google Play Services are available.");
+        }
+
+        SupportMapFragment fm = (SupportMapFragment) getSupportFragmentManager().findFragmentById(new_map);
         fm.getMapAsync(this);
 
-        mSegmentedGroup = (SegmentedGroup) findViewById(R.id.mCategorySelector);
-        mAutoCompleteCity = (AutoCompleteTextView) findViewById(R.id.seach_city);
-        mAutoCompletePlace = (AutoCompleteTextView) findViewById(R.id.seach_places);
-        mAutoCompleteCity.setThreshold(1);//what is setThreshold
+        mAutoCompleteCity.setThreshold(1);
         mAutoCompletePlace.setThreshold(1);
 
         /**
@@ -105,32 +139,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
          */
         mAutoCompleteCity.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            public
+            void onTextChanged(CharSequence s, int start, int before, int count) {
                 placesDownloadTask = new DownloadTask(PLACES);
-                String url = getAutoCompleteUrl(s.toString());
+                String url = getAutoUrlCity(s.toString());
                 placesDownloadTask.execute(url);
             }
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            public
+            void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
+            public
+            void afterTextChanged(Editable s) {
             }
         });
         mAutoCompleteCity.setOnItemClickListener(new OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> arg0, View arg1, int index, long id) {
+            public
+            void onItemClick(AdapterView<?> arg0, View arg1, int index, long id) {
 
                 ListView lv = (ListView) arg0;
                 SimpleAdapter adapter = (SimpleAdapter) arg0.getAdapter();
                 HashMap<String, String> hm = (HashMap<String, String>) adapter.getItem(index);
                 placeDetailsDownloadTask = new DownloadTask(PLACES_DETAILS);
                 String url = getPlaceDetailsUrl(hm.get("reference"));
-                Log.v("URL", url);
-                placeDetailsDownloadTask.execute(url);
 
+                Log.v("URL", url);
+                //   Log.v("getPlacesRating", googleRating);
+                placeDetailsDownloadTask.execute(url);
                 InputMethodManager in = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 in.hideSoftInputFromWindow(arg1.getApplicationWindowToken(), 0);
             }
@@ -139,30 +178,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         /**
          *  autocomplete places in a city
          */
+
         mAutoCompletePlace.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            public
+            void onTextChanged(CharSequence s, int start, int before, int count) {
                 placesDownloadTask = new DownloadTask(PLACES);
-                String url = getAutoCompleteUrlPlace(s.toString());
+                String url = getAutoUrlPlace(s.toString());
                 placesDownloadTask.execute(url);
             }
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            public
+            void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
+            public
+            void afterTextChanged(Editable s) {
             }
         });
         mAutoCompletePlace.setOnItemClickListener(new OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> arg0, View arg1, int index, long id) {
+            public
+            void onItemClick(AdapterView<?> arg0, View arg1, int index, long id) {
                 ListView lv = (ListView) arg0;
                 SimpleAdapter adapter = (SimpleAdapter) arg0.getAdapter();
                 HashMap<String, String> hm = (HashMap<String, String>) adapter.getItem(index);
                 placeDetailsDownloadTask = new DownloadTask(PLACES_DETAILS);
-                String url = getAutoCompleteUrlPlace(hm.get("reference"));
+                String url = getAutoUrlPlace(hm.get("reference"));
                 Log.v("URL", url);
                 placeDetailsDownloadTask.execute(url);
 
@@ -170,38 +214,60 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 in.hideSoftInputFromWindow(arg1.getApplicationWindowToken(), 0);
             }
         });
-
-        /**
-         * Segmented group for categories
-         */
-        mSegmentedGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                if (checkedId == R.id.radioBtnHotel) {
-                    Toast.makeText(MainActivity.this, "Hotels ", LENGTH_SHORT).show();
-                }
-                if (checkedId == R.id.radioBtnAtm) {
-                    Toast.makeText(MainActivity.this, "ATMs ", LENGTH_SHORT).show();
-                }
-                if (checkedId == R.id.radioBtnHospital) {
-                    Toast.makeText(MainActivity.this, "Hospitals ", LENGTH_SHORT).show();
-                }
-            }
-        });
     }//onCreate()
+
+    private
+    boolean CheckGoogleServices() {
+        GoogleApiAvailability googleAPI = GoogleApiAvailability.getInstance();
+        int result = googleAPI.isGooglePlayServicesAvailable(this);
+        if (result != ConnectionResult.SUCCESS) {
+            if (googleAPI.isUserResolvableError(result)) {
+                googleAPI.getErrorDialog(this, result,
+                        0).show();
+            }
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * check permissions for marshamallow
+     */
+    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+
+    public
+    boolean checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_LOCATION);
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_LOCATION);
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
 
     /**
      * Get autocomplete Url for google places
      *
-     * @param place
+     * @param city
      * @return
      */
-    private String getAutoCompleteUrl(String place) {
-        // Obtain browser key from https://code.google.com/apis/console
+    private
+    String getAutoUrlCity(String city) {
         String key = "key=AIzaSyDLuFX3GsD9UGhM60SG5E9zwvib2XcX5OE";
         String country = "components=country:in";
-        String input = "input=" + place;
-        String types = "types=(cities)";//&types=(cities)
+        String input = "input=" + city;
+        String types = "types=(cities)";
         String sensor = "sensor=false";
         String parameters = country + "&" + input + "&" + types + "&" + sensor + "&" + key;
         String output = "json";
@@ -209,12 +275,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return url;
     }
 
-    private String getAutoCompleteUrlPlace(String place) {
-        // Obtain browser key from https://code.google.com/apis/console
+    private
+    String getAutoUrlPlace(String place) {
         String key = "key=AIzaSyDLuFX3GsD9UGhM60SG5E9zwvib2XcX5OE";
         String country = "components=country:in";
         String input = "input=" + place;
-        String types = "&types=" + "hotels";//&types=(cities)
         String sensor = "sensor=false";
         String parameters = country + "&" + input + "&" + sensor + "&" + key;
         String output = "json";
@@ -228,7 +293,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      * @param ref
      * @return
      */
-    private String getPlaceDetailsUrl(String ref) {
+    private
+    String getPlaceDetailsUrl(String ref) {
         String key = "key=AIzaSyDLuFX3GsD9UGhM60SG5E9zwvib2XcX5OE";//places api key
         String reference = "reference=" + ref;
         String sensor = "sensor=false";
@@ -245,7 +311,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      * @return
      * @throws IOException
      */
-    private String downloadUrl(String strUrl) throws IOException {
+    private
+    String downloadUrl(String strUrl) throws IOException {
         String data = "";
         InputStream iStream = null;
         HttpURLConnection urlConnection = null;
@@ -273,48 +340,200 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     //clear text for cities
-    public void clearTxtCity(View view) {
+    public
+    void clearTxtCity(View view) {
         mAutoCompleteCity.setText("");
     }
 
     //clear text for places
-    public void clearTxtPlace(View view) {
+    public
+    void clearTxtPlace(View view) {
         mAutoCompletePlace.setText("");
     }
 
     /**
-     * on map ready
+     * on new_map ready
      *
      * @param googleMap
      */
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public
+    void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        LatLng india = new LatLng(18.5204300, 73.8567440);
-        mMap.addMarker(new MarkerOptions().position(india).title("Pune, India"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(india));
-
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) !=
-                        PackageManager.PERMISSION_GRANTED) {
-            return;
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                buildGoogleApiClient();
+                mMap.setMyLocationEnabled(true);
+            }
+        } else {
+            buildGoogleApiClient();
+            mMap.setMyLocationEnabled(true);
         }
-        mMap.setMyLocationEnabled(true);
+        /**
+         * Segmented group for categories
+         */
+        mSegmentedGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+
+            @Override
+            public
+            void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (checkedId == R.id.radioBtnHotel) {
+                    String restaurant = "restaurant";
+                    Log.d("segment1", "Button is Clicked");
+                    mMap.clear();
+                    if (Double.isNaN(latitude) && Double.isNaN(longitude)) {
+                        cityLatitude = latitude;
+                        cityLongitude = longitude;
+                    }
+                    String url = getUrlSeg(cityLatitude, cityLongitude, restaurant);
+                    Object[] DataTransfer = new Object[2];
+                    DataTransfer[0] = mMap;
+                    DataTransfer[1] = url;
+                    Log.d("onClick", url);
+                    GetPlacesData getPlacesData = new GetPlacesData();
+                    getPlacesData.execute(DataTransfer);
+                    Toast.makeText(MainActivity.this, "Hotels ", LENGTH_SHORT).show();
+                }
+                if (checkedId == R.id.radioBtnAtm) {
+                    String atms = "atm";
+                    Log.d("onClick", "Button is Clicked");
+                    mMap.clear();
+                    if (mCurrLocationMarker != null) {
+                        mCurrLocationMarker.remove();
+                    }
+                    String url = getUrlSeg(cityLatitude, cityLongitude, atms);
+                    Object[] DataTransfer = new Object[2];
+                    DataTransfer[0] = mMap;
+                    DataTransfer[1] = url;
+                    Log.d("onClick", url);
+                    GetPlacesData getPlacesData = new GetPlacesData();
+                    getPlacesData.execute(DataTransfer);
+                    Toast.makeText(MainActivity.this, "ATMs ", LENGTH_SHORT).show();
+
+                }
+                if (checkedId == R.id.radioBtnHospital) {
+                    String Hospital = "hospital";
+                    Log.d("onClick", "Button is Clicked");
+                    mMap.clear();
+                    if (Double.isNaN(cityLatitude) && Double.isNaN(cityLongitude)) {
+                        cityLatitude = latitude;
+                        cityLongitude = longitude;
+                    }
+                    String url = getUrlSeg(cityLatitude, cityLongitude, Hospital);
+                    Object[] DataTransfer = new Object[2];
+                    DataTransfer[0] = mMap;
+                    DataTransfer[1] = url;
+                    Log.d("onClick", url);
+                    GetPlacesData getPlacesData = new GetPlacesData();
+                    getPlacesData.execute(DataTransfer);
+                    Toast.makeText(MainActivity.this, "Hospitals ", LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private
+    String getUrlSeg(double cityLatitude, double cityLongitude, String nearbyPlace) {
+        StringBuilder googlePlacesUrl = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
+
+        googlePlacesUrl.append("location=" + cityLatitude + "," + cityLongitude);
+        googlePlacesUrl.append("&radius=" + PROXIMITY_RADIUS);
+        googlePlacesUrl.append("&type=" + nearbyPlace);
+        googlePlacesUrl.append("&sensor=true");
+        googlePlacesUrl.append("&key=" + "AIzaSyDLuFX3GsD9UGhM60SG5E9zwvib2XcX5OE");
+        Log.d("getUrlSeg", googlePlacesUrl.toString());
+        return (googlePlacesUrl.toString());
+    }
+
+    protected synchronized
+    void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    public
+    void onLocationChanged(Location location) {
+        Log.d("onLocationChanged", "inside onLocationChanged()");
+        mLastLocation = location;
+        if (mCurrLocationMarker != null) {
+            mCurrLocationMarker.remove();
+        }
+        //Place current location marker
+        latitude = location.getLatitude();
+        Log.v("Lat", String.valueOf(latitude));
+        longitude = location.getLongitude();
+
+        LatLng latLng = new LatLng(latitude, longitude);
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(latLng);
+        mCurrLocationMarker = mMap.addMarker(markerOptions);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        mMap.animateCamera(CameraUpdateFactory.zoomBy(11));
+        Log.d("onLocationChanged", String.format("latitude:%.3f longitude:%.3f", cityLatitude, cityLongitude));
+        if (mGoogleApiClient != null) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, MainActivity.this);
+            Log.d("onLocationChanged", "Removing Location Updates");
+        }
+        Log.d("onLocationChanged", "Exit");
+    }
+
+    @Override
+    public
+    void onConnected(@Nullable Bundle bundle) {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(1000);
+        mLocationRequest.setFastestInterval(1000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        }
+
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        if (mLastLocation != null) {
+            latitude = mLastLocation.getLatitude();
+            longitude = mLastLocation.getLongitude();
+
+            LatLng loc = new LatLng(latitude, longitude);
+            mMap.addMarker(new MarkerOptions().position(loc).title("My Current Location").
+                    icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(loc));
+        }
+    }
+
+    @Override
+    public
+    void onConnectionSuspended(int i) {
+    }
+
+    @Override
+    public
+    void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
     }
 
     /**
      * Fetches data from url passed
      */
-    private class DownloadTask extends AsyncTask<String, Void, String> {
+    private
+    class DownloadTask extends AsyncTask<String, Void, String> {
         private int downloadType = 0;
 
-        public DownloadTask(int type) {
+        public
+        DownloadTask(int type) {
             this.downloadType = type;
         }
 
         @Override
-        protected String doInBackground(String... url) {
+        protected
+        String doInBackground(String... url) {
             String data = "";
             try {
                 data = downloadUrl(url[0]);
@@ -326,7 +545,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         @Override
-        protected void onPostExecute(String result) {
+        protected
+        void onPostExecute(String result) {
             super.onPostExecute(result);
             switch (downloadType) {
                 case PLACES:
@@ -347,15 +567,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      * A class to parse the Google Places in JSON format
      */
-    private class ParserTask extends AsyncTask<String, Integer, List<HashMap<String, String>>> {
+    private
+    class ParserTask extends AsyncTask<String, Integer, List<HashMap<String, String>>> {
         int parserType = 0;
 
-        public ParserTask(int type) {
+        public
+        ParserTask(int type) {
             this.parserType = type;
         }
 
         @Override
-        protected List<HashMap<String, String>> doInBackground(String... jsonData) {
+        protected
+        List<HashMap<String, String>> doInBackground(String... jsonData) {
             JSONObject jObject;
             List<HashMap<String, String>> list = null;
             try {
@@ -363,12 +586,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 switch (parserType) {
                     case PLACES:
-                        PlaceJSONParser placeJsonParser = new PlaceJSONParser();
-                        list = placeJsonParser.parse(jObject);
+                        PlaceParser placeParser = new PlaceParser();
+                        list = placeParser.parse(jObject);
                         break;
                     case PLACES_DETAILS:
-                        PlaceDetailsJsonParser placeDetailsJsonParser = new PlaceDetailsJsonParser();
-                        list = placeDetailsJsonParser.parse(jObject);
+                        PlaceDetailsParser placeDetailsParser = new PlaceDetailsParser();
+                        list = placeDetailsParser.parse(jObject);
                 }
 
             } catch (Exception e) {
@@ -378,7 +601,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         @Override
-        protected void onPostExecute(List<HashMap<String, String>> result) {
+        protected
+        void onPostExecute(List<HashMap<String, String>> result) {
             switch (parserType) {
                 case PLACES:
                     String[] from = new String[]{"description"};
@@ -391,10 +615,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 case PLACES_DETAILS:
                     mMap.clear();
                     HashMap<String, String> hm = result.get(0);
-                    final double latitude = Double.parseDouble(hm.get("latitude"));
-                    final double longitude = Double.parseDouble(hm.get("longitude"));
 
-                    LatLng point = new LatLng(latitude, longitude);
+                    cityLatitude = Double.parseDouble(hm.get("latitude"));
+                    cityLongitude = Double.parseDouble(hm.get("longitude"));
+                    LatLng point = new LatLng(cityLatitude, cityLongitude);
 
                     CameraUpdate cameraPosition = CameraUpdateFactory.newLatLng(point);
                     CameraUpdate cameraZoom = CameraUpdateFactory.zoomBy(12);
@@ -403,64 +627,57 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     mMap.animateCamera(cameraZoom);
 
                     MarkerOptions options = new MarkerOptions();
-                    options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                    options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
                     options.position(point);
                     options.title("Position");
-                    options.snippet("Latitude:" + latitude + ",Longitude:" + longitude);
+                    options.snippet("Latitude:" + cityLatitude + ",Longitude:" + cityLongitude);
 
+                    //intent to Details Activity
                     mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
                         @Override
-                        public void onInfoWindowClick(Marker marker) {
+                        public
+                        void onInfoWindowClick(Marker marker) {
                             Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
-                            intent.putExtra("lattitude", latitude);
-                            intent.putExtra("longitude", longitude);
+                            intent.putExtra("lattitude", cityLatitude);
+                            intent.putExtra("longitude", cityLongitude);
+                            intent.putExtra("rating", googleRating);
                             startActivity(intent);
                         }
                     });
 
                     CircleOptions circleOptions = new CircleOptions();
                     circleOptions.center(point);
-                    //Radius in meters
                     circleOptions.radius(500);
                     circleOptions.fillColor(getResources().getColor(R.color.colorMapCircle));
                     circleOptions.strokeColor(getResources().getColor(R.color.colorAccent));
                     circleOptions.strokeWidth(5);
-                    // Adding the marker in the Google Map
+
                     mMap.addMarker(options);
                     mMap.addCircle(circleOptions);
                     mMap.animateCamera(CameraUpdateFactory.newLatLng(point));
-                    mMap.getUiSettings().setRotateGesturesEnabled(true);
-                    mMap.getUiSettings().setAllGesturesEnabled(true);
-                    mMap.getUiSettings().setScrollGesturesEnabled(true);
-                    mMap.getUiSettings().setIndoorLevelPickerEnabled(true);
-                    mMap.getUiSettings().setMapToolbarEnabled(true);
-                    mMap.getUiSettings().setZoomControlsEnabled(true);
-                    mMap.getUiSettings().setZoomGesturesEnabled(true);
-                    mMap.getUiSettings().setMyLocationButtonEnabled(true);
-                    mMap.getUiSettings().setRotateGesturesEnabled(false);
                     break;
             }
         }
-    }
+    }//end ParserTask async class
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public
+    boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
+    public
+    boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_mapview:
-                Toast.makeText(getApplicationContext(), "Item 1 Selected", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Item 1", Toast.LENGTH_LONG).show();
                 return true;
             case R.id.menu_others:
-                Toast.makeText(getApplicationContext(), "Item 2 Selected", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Item 2", Toast.LENGTH_LONG).show();
                 return true;
-
             default:
                 return super.onOptionsItemSelected(item);
         }

@@ -10,7 +10,7 @@ import org.json.JSONObject;
 /**
  * Created by Prajakta Patil on 4/1/17.
  */
-public class PlaceJSONParser {
+public class PlaceParser {
 
     /** Receives a JSONObject and returns a list */
     public List<HashMap<String,String>> parse(JSONObject jObject){
