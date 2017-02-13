@@ -10,6 +10,19 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="dimen_5">5dp</dimen>
     <dimen name="dimen_1">1dp</dimen>
+    <dimen name="dimen_8">8dp</dimen>
+    <dimen name="dimen_120">120dp</dimen>
+    <dimen name="dimen_145">145dp</dimen>
+    <dimen name="dimen_2">2dp</dimen>
+    <dimen name="dimen_40">40dp</dimen>
+    <dimen name="dimen_70">70dp</dimen>
+    <dimen name="dimen_230">230dp</dimen>
+    <dimen name="dimen_14">14sp</dimen>
+    <dimen name="dimen_270">270dp</dimen>
+    <dimen name="dimen_105">105dp</dimen>
+    <dimen name="dimen_193">193dp</dimen>
+    <dimen name="dimen_16">16sp</dimen>
+    <dimen name="dimen_12">12sp</dimen>
 
 
 </resources>
