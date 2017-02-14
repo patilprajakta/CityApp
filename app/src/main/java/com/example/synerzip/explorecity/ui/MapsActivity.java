@@ -184,7 +184,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .build();
 
         RetrofitMaps service = retrofit.create(RetrofitMaps.class);
-        service.getCityResults(place,radius, key).enqueue(new Callback<GoogleResponse>() {
+        service.getCityResults(place, radius, key).enqueue(new Callback<GoogleResponse>() {
             @Override
             public void onResponse(Response<GoogleResponse> response, Retrofit retrofit) {
 
@@ -211,7 +211,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    private void getFoursquarePlaces(Double lat, Double lng,String type) {
+    private void getFoursquarePlaces(Double lat, Double lng, String type) {
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -237,11 +237,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         FoursquareResponse foursquareResponse = json.response;
                         List<FoursquareVenue> foursquareVenuesList = foursquareResponse.venue;
 
-                        for( FoursquareVenue foursquareVenue:foursquareVenuesList){
-                            foursquareLat=foursquareVenue.getLat();
-                            foursquareLng=foursquareVenue.getLng();
+                        for (FoursquareVenue foursquareVenue : foursquareVenuesList) {
+                            foursquareLat = foursquareVenue.getLocation().getLat();
+                            foursquareLng = foursquareVenue.getLocation().getLng();
                         }
                     }
+
                     @Override
                     public void onFailure(Throwable t) {
                         t.printStackTrace();
@@ -259,21 +260,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .build();
 
         RetrofitMaps service = retrofit.create(RetrofitMaps.class);
-        service.getPlaceResults( place, radius, key)
+        service.getPlaceResults(place, radius, key)
                 .enqueue(new Callback<GoogleResponse>() {
-            @Override
-            public void onResponse(Response<GoogleResponse> response, Retrofit retrofit) {
-                List<GoogleResult> places = new ArrayList<>();
-                places.get(0);
+                    @Override
+                    public void onResponse(Response<GoogleResponse> response, Retrofit retrofit) {
 
-                
-            }
+                        Double latitude = response.body().getResults().get(0).getGeometry().getLocation().getLat();
+                        Double longitude = response.body().getResults().get(0).getGeometry().getLocation().getLng();
 
-            @Override
-            public void onFailure(Throwable t) {
-                t.printStackTrace();
-            }
-        });
+                        String placeName = response.body().getResults().get(0).getName();
+                        String vicinity = response.body().getResults().get(0).getVicinity();
+                        MarkerOptions markerOptions = new MarkerOptions();
+                        LatLng latLng = new LatLng(latitude, longitude);
+                        markerOptions.position(latLng);
+                        markerOptions.title(placeName + " : " + vicinity);
+                        Marker m = mMap.addMarker(markerOptions);
+                        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                        mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        t.printStackTrace();
+                    }
+                });
 
     }
 
@@ -306,7 +317,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (checkedId == R.id.radioBtnHotel) {
                     String restaurant = getString(R.string.restaurant);
                     mMap.clear();
-                    getFoursquarePlaces(foursquareLat,foursquareLng,restaurant);
+                    getFoursquarePlaces(foursquareLat, foursquareLng, restaurant);
                     Object[] DataTransfer = new Object[2];
                     DataTransfer[0] = mMap;
                     Toast.makeText(MapsActivity.this, getString(R.string.Hotels), LENGTH_SHORT).show();
@@ -314,7 +325,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (checkedId == R.id.radioBtnAtm) {
                     String atms = getString(R.string.atm);
                     mMap.clear();
-                    getFoursquarePlaces(foursquareLat,foursquareLng,atms);
+                    getFoursquarePlaces(foursquareLat, foursquareLng, atms);
                     Object[] DataTransfer = new Object[2];
                     DataTransfer[0] = mMap;
                     Toast.makeText(MapsActivity.this, getString(R.string.ATMs), LENGTH_SHORT).show();
@@ -323,7 +334,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (checkedId == R.id.radioBtnHospital) {
                     String hospital = getString(R.string.hospital);
                     mMap.clear();
-                    getFoursquarePlaces(foursquareLat,foursquareLng,hospital);
+                    getFoursquarePlaces(foursquareLat, foursquareLng, hospital);
                     Object[] DataTransfer = new Object[2];
                     DataTransfer[0] = mMap;
                     Toast.makeText(MapsActivity.this, getString(R.string.Hospitals), LENGTH_SHORT).show();
@@ -334,6 +345,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     /**
      * check google play services
+     *
      * @return
      */
     private boolean isGooglePlayServicesAvailable() {
