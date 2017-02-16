@@ -7,7 +7,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Created by synerzip on 10/2/17.
+ * Created by Prajakta Patil on 10/2/17.
+ * Copyright © 2017 Synerzip. All rights reserved
  */
 @Getter
 @Setter
@@ -16,22 +17,6 @@ public class GoogleLocation {
     @SerializedName("lat")
     @Expose
     private Double lat;
-
-    public Double getLng() {
-        return lng;
-    }
-
-    public void setLng(Double lng) {
-        this.lng = lng;
-    }
-
-    public Double getLat() {
-        return lat;
-    }
-
-    public void setLat(Double lat) {
-        this.lat = lat;
-    }
 
     @SerializedName("lng")
     @Expose

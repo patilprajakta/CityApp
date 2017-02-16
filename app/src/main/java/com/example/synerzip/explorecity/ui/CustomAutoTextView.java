@@ -11,6 +11,7 @@ import com.google.android.gms.location.places.AutocompleteFilter;
 
 /**
  * Created by Prajakta Patil on 4/1/17.
+ * Copyright © 2017 Synerzip. All rights reserved
  */
 
 public class CustomAutoTextView extends AutoCompleteTextView {

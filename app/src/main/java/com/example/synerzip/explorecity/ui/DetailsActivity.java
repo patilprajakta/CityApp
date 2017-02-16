@@ -19,6 +19,10 @@ import butterknife.ButterKnife;
 
 import static com.example.synerzip.explorecity.R.id.map;
 
+/**
+ * Created by Prajakta Patil on 4/1/17.
+ * Copyright © 2017 Synerzip. All rights reserved
+ */
 public class DetailsActivity extends AppCompatActivity implements OnMapReadyCallback {
     @BindView(R.id.toolBar)
     Toolbar toolbar;

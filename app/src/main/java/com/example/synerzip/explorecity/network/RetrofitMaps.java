@@ -8,7 +8,8 @@ import retrofit.http.GET;
 import retrofit.http.Query;
 
 /**
- * Created by synerzip on 10/2/17.
+ * Created by Prajakta Patil on 10/2/17.
+ * Copyright © 2017 Synerzip. All rights reserved
  */
 
 public interface RetrofitMaps {

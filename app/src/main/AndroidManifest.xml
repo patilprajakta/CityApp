@@ -34,7 +34,8 @@
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="8f78836c7aeae7cad91ef75d7303185330533f66" />
-        <activity android:name=".ui.MapsActivity"></activity>
+
+        <activity android:name=".ui.MapsActivity" />
     </application>
 
 </manifest>

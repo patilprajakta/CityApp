@@ -23,6 +23,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -38,15 +39,19 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -66,7 +71,12 @@ import retrofit.Retrofit;
 
 import static android.widget.Toast.LENGTH_SHORT;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
+/**
+ * Created by Prajakta Patil on 9/2/17.
+ * Copyright © 2017 Synerzip. All rights reserved
+ */
+public class MapsActivity extends FragmentActivity implements
+        PlaceSelectionListener, OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
@@ -84,8 +94,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Location mLastLocation;
     Marker mCurrLocationMarker;
     LocationRequest mLocationRequest;
-    Double googleCityLat, googleCityLng;
-    Double foursquareLat, foursquareLng;
+    double googleCityLat, googleCityLng;
+    double foursquareLat, foursquareLng;
 
     @BindView(R.id.mCategorySelector)
     SegmentedGroup mSegmentedGroup;
@@ -189,8 +199,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onResponse(Response<GoogleResponse> response, Retrofit retrofit) {
 
                 for (int i = 0; i < response.body().getResults().size(); i++) {
-                    Double lat = response.body().getResults().get(i).getGeometry().getLocation().getLat();
-                    Double lng = response.body().getResults().get(i).getGeometry().getLocation().getLng();
+                    double lat = response.body().getResults().get(i).getGeometry().getLocation().getLat();
+                    double lng = response.body().getResults().get(i).getGeometry().getLocation().getLng();
                     String placeName = response.body().getResults().get(i).getName();
                     String vicinity = response.body().getResults().get(i).getVicinity();
                     MarkerOptions markerOptions = new MarkerOptions();
@@ -211,7 +221,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    private void getFoursquarePlaces(Double lat, Double lng, String type) {
+    private void getFoursquarePlaces(double lat, double lng, String type) {
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -234,8 +244,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void onResponse(Response<FoursquareJSON> response, Retrofit retrofit) {
                         FoursquareJSON json = response.body();
-                        FoursquareResponse foursquareResponse = json.response;
-                        List<FoursquareVenue> foursquareVenuesList = foursquareResponse.venue;
+                        FoursquareResponse foursquareResponse = json.getFoursquareResponse();
+                        List<FoursquareVenue> foursquareVenuesList = foursquareResponse.getVenues();
 
                         for (FoursquareVenue foursquareVenue : foursquareVenuesList) {
                             foursquareLat = foursquareVenue.getLocation().getLat();
@@ -265,8 +275,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void onResponse(Response<GoogleResponse> response, Retrofit retrofit) {
 
-                        Double latitude = response.body().getResults().get(0).getGeometry().getLocation().getLat();
-                        Double longitude = response.body().getResults().get(0).getGeometry().getLocation().getLng();
+                        double latitude = response.body().getResults().get(0).getGeometry().getLocation().getLat();
+                        double longitude = response.body().getResults().get(0).getGeometry().getLocation().getLng();
 
                         String placeName = response.body().getResults().get(0).getName();
                         String vicinity = response.body().getResults().get(0).getVicinity();
@@ -274,7 +284,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         LatLng latLng = new LatLng(latitude, longitude);
                         markerOptions.position(latLng);
                         markerOptions.title(placeName + " : " + vicinity);
-                        Marker m = mMap.addMarker(markerOptions);
+                        mMap.addMarker(markerOptions);
                         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
                         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
                         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
@@ -379,9 +389,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
         if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        }
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        if (mLastLocation != null) {
+            latitude = mLastLocation.getLatitude();
+            longitude = mLastLocation.getLongitude();
+
+            LatLng loc = new LatLng(latitude, longitude);
+            mMap.addMarker(new MarkerOptions().position(loc).title(getString(R.string.current_pos)).
+                    icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(loc));
+            mMap.animateCamera(CameraUpdateFactory.zoomBy(11));
         }
     }
 
@@ -397,15 +418,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mCurrLocationMarker.remove();
         }
         latitude = location.getLatitude();
+        Log.v("Lat", String.valueOf(latitude));
         longitude = location.getLongitude();
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+
+        LatLng latLng = new LatLng(latitude, longitude);
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
-        markerOptions.title(getString(R.string.current_pos));
-        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+
         mCurrLocationMarker = mMap.addMarker(markerOptions);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+        mMap.addMarker(new MarkerOptions().
+                icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+        mMap.animateCamera(CameraUpdateFactory.zoomBy(11));
+        if (mGoogleApiClient != null) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, MapsActivity.this);
+        }
     }
 
     @Override
@@ -496,5 +523,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onPlaceSelected(Place place) {
+
+    }
+
+    @Override
+    public void onError(Status status) {
+
     }
 }
