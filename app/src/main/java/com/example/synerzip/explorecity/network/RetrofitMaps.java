@@ -1,6 +1,7 @@
 package com.example.synerzip.explorecity.network;
 
 import com.example.synerzip.explorecity.models.FoursquareJSON;
+import com.example.synerzip.explorecity.models.GooglePredictions;
 import com.example.synerzip.explorecity.models.GoogleResponse;
 
 import retrofit.Call;
@@ -24,8 +25,8 @@ public interface RetrofitMaps {
      */
     @GET(AppConstants.GOOGLE_ENDPOINT)
     Call<GoogleResponse> getCityResults(@Query("input") String input,
-                                        @Query("radius") Integer radius,
-                                        @Query("key") String key);
+                                           @Query("radius") Integer radius,
+                                           @Query("key") String key);
 
     /**
      * google autocomplete for places

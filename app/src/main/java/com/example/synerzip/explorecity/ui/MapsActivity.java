@@ -1,10 +1,13 @@
 package com.example.synerzip.explorecity.ui;
 
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Bundle;
 
 import com.example.synerzip.explorecity.models.FoursquareJSON;
 import com.example.synerzip.explorecity.models.FoursquareResponse;
 import com.example.synerzip.explorecity.models.FoursquareVenue;
+import com.example.synerzip.explorecity.models.GooglePredictions;
 import com.example.synerzip.explorecity.models.GoogleResult;
 import com.example.synerzip.explorecity.R;
 
@@ -24,16 +27,20 @@ import android.support.v4.app.FragmentActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -55,12 +62,14 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import info.hoang8f.android.segmented.SegmentedGroup;
 import retrofit.Call;
 import retrofit.Callback;
@@ -102,6 +111,7 @@ public class MapsActivity extends FragmentActivity implements
 
     String key = AppConstants.GOOGLE_PLACES_API_KEY;
     int radius = 100000;
+    Button mClearCityTxt, mClearPlaceTxt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,7 +131,7 @@ public class MapsActivity extends FragmentActivity implements
         mapFragment.getMapAsync(this);
 
         /**
-         * autocomplete city
+         * autocomplete textview for city search
          */
         mAutoCompleteCity.addTextChangedListener(new TextWatcher() {
             @Override
@@ -135,6 +145,12 @@ public class MapsActivity extends FragmentActivity implements
 
             @Override
             public void afterTextChanged(Editable s) {
+
+                if (s.length() > 0) {
+                    mClearCityTxt.setVisibility(View.VISIBLE);
+                } else {
+                    mClearCityTxt.setVisibility(View.GONE);
+                }
             }
         });
         mAutoCompleteCity.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -151,7 +167,7 @@ public class MapsActivity extends FragmentActivity implements
         });
 
         /**
-         *  autocomplete places in a city
+         *  autocomplete textview for places search
          */
         mAutoCompletePlace.addTextChangedListener(new TextWatcher() {
             @Override
@@ -165,6 +181,11 @@ public class MapsActivity extends FragmentActivity implements
 
             @Override
             public void afterTextChanged(Editable s) {
+                if (s.length() > 0) {
+                    mClearPlaceTxt.setVisibility(View.VISIBLE);
+                } else {
+                    mClearPlaceTxt.setVisibility(View.GONE);
+                }
             }
         });
         mAutoCompletePlace.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -181,8 +202,20 @@ public class MapsActivity extends FragmentActivity implements
 
     }
 
+    //clear text of city search bar
+    @OnClick(R.id.clear_text_city)
+    public void clearCity() {
+        mClearCityTxt.setText("");
+    }
+
+    //clear text of places search bar
+    @OnClick(R.id.clear_text_place)
+    public void clearPlace() {
+        mClearPlaceTxt.setText("");
+    }
+
     /**
-     * Google places api call
+     * google places api call for city search
      *
      * @param place
      */
@@ -207,20 +240,31 @@ public class MapsActivity extends FragmentActivity implements
                     LatLng latLng = new LatLng(lat, lng);
                     markerOptions.position(latLng);
                     markerOptions.title(placeName + " : " + vicinity);
-                    Marker m = mMap.addMarker(markerOptions);
+                    mMap.addMarker(markerOptions);
                     markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
                     mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
                 }
             }
-
+            /**
+             * show toast on api call failure
+             * @param t
+             */
             @Override
             public void onFailure(Throwable t) {
+                Toast.makeText(MapsActivity.this, getString(R.string.failure), LENGTH_SHORT).show();
                 t.printStackTrace();
             }
         });
     }
 
+    /**
+     * foursquare api call for filtering categories
+     *
+     * @param lat
+     * @param lng
+     * @param type
+     */
     private void getFoursquarePlaces(double lat, double lng, String type) {
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
@@ -253,8 +297,13 @@ public class MapsActivity extends FragmentActivity implements
                         }
                     }
 
+                    /**
+                     * show toast on api call failure
+                     * @param t
+                     */
                     @Override
                     public void onFailure(Throwable t) {
+                        Toast.makeText(MapsActivity.this, getString(R.string.failure), LENGTH_SHORT).show();
                         t.printStackTrace();
                     }
 
@@ -263,6 +312,11 @@ public class MapsActivity extends FragmentActivity implements
         }
     }
 
+    /**
+     * google places api call for places search
+     *
+     * @param place
+     */
     private void getGoogleMapsAutoPlaces(final String place) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(AppConstants.GOOGLE_BASE_URL)
@@ -289,9 +343,13 @@ public class MapsActivity extends FragmentActivity implements
                         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
                         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
                     }
-
+                    /**
+                     * show toast on api call failure
+                     * @param t
+                     */
                     @Override
                     public void onFailure(Throwable t) {
+                        Toast.makeText(MapsActivity.this, getString(R.string.failure), LENGTH_SHORT).show();
                         t.printStackTrace();
                     }
                 });
@@ -382,6 +440,11 @@ public class MapsActivity extends FragmentActivity implements
         mGoogleApiClient.connect();
     }
 
+    /**
+     * sets marker on current position on activity launch
+     *
+     * @param bundle
+     */
     @Override
     public void onConnected(Bundle bundle) {
         mLocationRequest = new LocationRequest();
@@ -401,8 +464,8 @@ public class MapsActivity extends FragmentActivity implements
             LatLng loc = new LatLng(latitude, longitude);
             mMap.addMarker(new MarkerOptions().position(loc).title(getString(R.string.current_pos)).
                     icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(loc));
-            mMap.animateCamera(CameraUpdateFactory.zoomBy(11));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 10));
+            mMap.animateCamera(CameraUpdateFactory.zoomBy(8));
         }
     }
 
@@ -411,6 +474,11 @@ public class MapsActivity extends FragmentActivity implements
 
     }
 
+    /**
+     * sets marker on location change
+     *
+     * @param location
+     */
     @Override
     public void onLocationChanged(Location location) {
         mLastLocation = location;
@@ -440,7 +508,7 @@ public class MapsActivity extends FragmentActivity implements
     }
 
     /**
-     * check location permission
+     * check location permissions
      */
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
