@@ -5,6 +5,7 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
 
 import com.example.synerzip.explorecity.R;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -40,6 +41,14 @@ public class DetailsActivity extends AppCompatActivity implements OnMapReadyCall
         ButterKnife.bind(this);
 
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(true);
+        toolbar.setNavigationIcon(android.support.v7.appcompat.R.drawable.abc_ic_ab_back_material);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onBackPressed();
+            }
+        });
         collapsingToolbarLayout.setTitle(getString(R.string.hotel_name));
 
         SupportMapFragment fm = (SupportMapFragment) getSupportFragmentManager().findFragmentById(map);

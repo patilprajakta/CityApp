@@ -23,6 +23,5 @@
     <dimen name="dimen_193">193dp</dimen>
     <dimen name="dimen_16">16sp</dimen>
     <dimen name="dimen_12">12sp</dimen>
-
-
+    <dimen name="dimen_4">4dp</dimen>
 </resources>

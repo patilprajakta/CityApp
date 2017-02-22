@@ -10,11 +10,13 @@
         android:id="@+id/coordinatorlayout"
         android:layout_width="fill_parent"
         android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
         app:expandedTitleMarginStart="@dimen/dimen_70">
 
         <android.support.design.widget.AppBarLayout
             android:layout_width="fill_parent"
             android:layout_height="@dimen/dimen_230"
+            android:fitsSystemWindows="true"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
             <android.support.design.widget.CollapsingToolbarLayout
@@ -23,13 +25,14 @@
                 android:layout_height="match_parent"
                 android:background="@drawable/ic_hotel"
                 android:fitsSystemWindows="true"
+                app:contentScrim="?attr/colorPrimary"
                 app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
                 <android.support.v7.widget.Toolbar
                     android:id="@+id/toolBar"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
-                    app:layout_collapseMode="parallax"
+                    app:layout_collapseMode="pin"
                     app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
                     app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
 
@@ -218,6 +221,18 @@
                     android:layout_marginLeft="@dimen/dimen_10"
                     android:layout_marginRight="@dimen/dimen_10"
                     android:background="@color/colorBackgroundDetails" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <ListView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                    </ListView>
+
+                </LinearLayout>
 
             </LinearLayout>
         </android.support.v4.widget.NestedScrollView>

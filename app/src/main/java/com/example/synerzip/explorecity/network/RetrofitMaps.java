@@ -3,6 +3,7 @@ package com.example.synerzip.explorecity.network;
 import com.example.synerzip.explorecity.models.FoursquareJSON;
 import com.example.synerzip.explorecity.models.GooglePredictions;
 import com.example.synerzip.explorecity.models.GoogleResponse;
+import com.example.synerzip.explorecity.models.ZomatoJSON;
 
 import retrofit.Call;
 import retrofit.http.GET;
@@ -55,4 +56,9 @@ public interface RetrofitMaps {
                                           @Query("client_secret") String clientSecret,
                                           @Query("ll") String ll,
                                           @Query("llAcc") double llAcc);
+
+    @GET(AppConstants.ZOMATO_ENDPOINT)
+    Call<ZomatoJSON> zomatoDetails(@Query("user-key") String clientID,
+                                      @Query("lat") String ll,
+                                      @Query("lon") double llAcc);
 }

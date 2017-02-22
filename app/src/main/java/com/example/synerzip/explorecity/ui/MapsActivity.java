@@ -1,14 +1,10 @@
 package com.example.synerzip.explorecity.ui;
 
-import android.location.Address;
-import android.location.Geocoder;
 import android.os.Bundle;
 
 import com.example.synerzip.explorecity.models.FoursquareJSON;
 import com.example.synerzip.explorecity.models.FoursquareResponse;
 import com.example.synerzip.explorecity.models.FoursquareVenue;
-import com.example.synerzip.explorecity.models.GooglePredictions;
-import com.example.synerzip.explorecity.models.GoogleResult;
 import com.example.synerzip.explorecity.R;
 
 import android.content.Context;
@@ -27,12 +23,10 @@ import android.support.v4.app.FragmentActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
@@ -40,7 +34,6 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.SimpleAdapter;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -58,12 +51,9 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -145,7 +135,6 @@ public class MapsActivity extends FragmentActivity implements
 
             @Override
             public void afterTextChanged(Editable s) {
-
                 if (s.length() > 0) {
                     mClearCityTxt.setVisibility(View.VISIBLE);
                 } else {
@@ -246,6 +235,7 @@ public class MapsActivity extends FragmentActivity implements
                     mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
                 }
             }
+
             /**
              * show toast on api call failure
              * @param t
@@ -288,6 +278,7 @@ public class MapsActivity extends FragmentActivity implements
                     @Override
                     public void onResponse(Response<FoursquareJSON> response, Retrofit retrofit) {
                         FoursquareJSON json = response.body();
+
                         FoursquareResponse foursquareResponse = json.getFoursquareResponse();
                         List<FoursquareVenue> foursquareVenuesList = foursquareResponse.getVenues();
 
@@ -343,6 +334,7 @@ public class MapsActivity extends FragmentActivity implements
                         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
                         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
                     }
+
                     /**
                      * show toast on api call failure
                      * @param t
@@ -353,7 +345,6 @@ public class MapsActivity extends FragmentActivity implements
                         t.printStackTrace();
                     }
                 });
-
     }
 
     /**
@@ -464,14 +455,16 @@ public class MapsActivity extends FragmentActivity implements
             LatLng loc = new LatLng(latitude, longitude);
             mMap.addMarker(new MarkerOptions().position(loc).title(getString(R.string.current_pos)).
                     icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+            //returns a CameraUpdate that transforms the camera
+            // such that the specified lat/lng bounds are centered on screen at the greatest possible zoom level.
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 10));
+            //returns a CameraUpdate that shifts the zoom level of the 'current' camera viewpoint.
             mMap.animateCamera(CameraUpdateFactory.zoomBy(8));
         }
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-
     }
 
     /**
@@ -486,7 +479,6 @@ public class MapsActivity extends FragmentActivity implements
             mCurrLocationMarker.remove();
         }
         latitude = location.getLatitude();
-        Log.v("Lat", String.valueOf(latitude));
         longitude = location.getLongitude();
 
         LatLng latLng = new LatLng(latitude, longitude);
@@ -510,7 +502,7 @@ public class MapsActivity extends FragmentActivity implements
     /**
      * check location permissions
      */
-    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+    public static final int PERMISSIONS_REQUEST_LOCATION = 99;
 
     public boolean checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this,
@@ -520,11 +512,11 @@ public class MapsActivity extends FragmentActivity implements
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_LOCATION);
+                        PERMISSIONS_REQUEST_LOCATION);
             } else {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_LOCATION);
+                        PERMISSIONS_REQUEST_LOCATION);
             }
             return false;
         } else {
@@ -543,7 +535,7 @@ public class MapsActivity extends FragmentActivity implements
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_LOCATION: {
+            case PERMISSIONS_REQUEST_LOCATION: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if (ContextCompat.checkSelfPermission(this,

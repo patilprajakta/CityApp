@@ -13,6 +13,8 @@ public class AppConstants {
 
     public static final String FOURSQUARE_CLIENT_SECRET = "5FRCH0GERDOWRDZ3OFJQEWDWN1I4VO4FAWE0OECIMO3SOUPT";
 
+    public static final String ZOMATO_USER_KEY = "90b35b156ac6d4b73ccb840ced49ab3e";
+
     public static final String FOURSQUARE_BASE_URL = "https://api.foursquare.com/v2/";
 
     public static final String GOOGLE_BASE_URL = "https://maps.googleapis.com";
@@ -22,5 +24,10 @@ public class AppConstants {
     public static final String FOURSQUARE_ENDPOINT = "venues/search?v=20161101&limit=50";
 
     public static final String GOOGLE_ENDPOINT = "/maps/api/place/autocomplete/json?&types=(cities)";
+
+    public static final String ZOMATO_BASE_URL="https://api.zomato.com/v2.1/";
+
+    public static final String ZOMATO_ENDPOINT=
+            "search.json?&count=50&radius=100000";
 
 }
