@@ -1,60 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <LinearLayout
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:orientation="horizontal">
+        android:background="@color/colorPrimary"
+        app:title="@string/ExploreCity"
+        app:titleTextColor="@color/colorWhite" />
 
-        <EditText
-            android:id="@+id/editTxtCitySearch"
-            android:layout_width="wrap_content"
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dimen_10">
+
+        <com.example.synerzip.explorecity.ui.CustomAutoTextView
+            android:id="@+id/seach_city"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="4"
-            android:hint="Search City" />
+            android:layout_alignParentTop="true"
+            android:dropDownWidth="fill_parent"
+            android:hint="@string/search_city"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:singleLine="true" />
+
+        <requestFocus />
 
         <Button
-            android:id="@+id/btn_city_search"
-            android:layout_width="wrap_content"
+            android:id="@+id/clear_text_city"
+            android:layout_width="@dimen/dimen_20"
+            android:layout_height="@dimen/dimen_20"
+            android:layout_gravity="right|center_vertical"
+            android:layout_margin="@dimen/dimen_8"
+            android:background="@drawable/clear_text"
+            android:onClick="clearTxtCity" />
+
+    </FrameLayout>
+
+    <info.hoang8f.android.segmented.SegmentedGroup
+        android:id="@+id/mCategorySelector"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dimen_40"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/dimen_10"
+        android:orientation="horizontal"
+        app:sc_border_width="@dimen/dimen_2"
+        app:sc_corner_radius="@dimen/dimen_10"
+        app:sc_tint_color="@color/colorPrimaryDark">
+
+        <RadioButton
+            android:id="@+id/radioBtnHotel"
+            style="@style/RadioButton"
+            android:layout_width="@dimen/dimen_145"
             android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:onClick="onMapSearch"
-            android:text="Search" />
+            android:layout_marginLeft="@dimen/dimen_10"
+            android:checked="false"
+            android:padding="@dimen/dimen_5"
+            android:text="@string/Hotels" />
 
-    </LinearLayout>
+        <RadioButton
+            android:id="@+id/radioBtnAtm"
+            style="@style/RadioButton"
+            android:layout_width="@dimen/dimen_120"
+            android:layout_height="wrap_content"
+            android:enabled="true"
+            android:padding="@dimen/dimen_5"
+            android:text="@string/ATMs" />
 
-    <LinearLayout
-        android:visibility="gone"
+        <RadioButton
+            android:id="@+id/radioBtnHospital"
+            style="@style/RadioButton"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:enabled="true"
+            android:padding="5dp"
+            android:text="@string/hospital" />
+
+    </info.hoang8f.android.segmented.SegmentedGroup>
+
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dimen_10">
+
+        <com.example.synerzip.explorecity.ui.CustomAutoTextView
+            android:id="@+id/seach_places"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:dropDownWidth="fill_parent"
+            android:hint="@string/search_place"
+            android:inputType="text"
+            android:singleLine="true" />
+
+        <requestFocus />
+
+        <Button
+            android:id="@+id/clear_text_place"
+            android:layout_width="@dimen/dimen_20"
+            android:layout_height="@dimen/dimen_20"
+            android:layout_gravity="right|center_vertical"
+            android:layout_margin="@dimen/dimen_8"
+            android:background="@drawable/clear_text"
+            android:onClick="clearTxtPlace" />
+    </FrameLayout>
+
+    <fragment
+        android:id="@+id/map"
+        class="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:orientation="horizontal">
-
-        <EditText
-            android:id="@+id/editTxtPlacesSearch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="4"
-            android:hint="Search City" />
-
-        <Button
-            android:id="@+id/btn_places_search"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:onClick="onMapSearch"
-            android:text="Search" />
-
-    </LinearLayout>
-
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/googlemap"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context="com.example.synerzip.explorecity.MapsActivity" />
+        android:layout_below="@id/seach_city"
+        android:layout_marginTop="@dimen/dimen_10" />
 </LinearLayout>
